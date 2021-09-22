@@ -38,7 +38,7 @@
                 }
             };
             
-            const myRequest = new Request('./isOnline.html', {method: 'GET'});
+            const myRequest = new Request('./isOnline', {method: 'GET'});
             fetch(myRequest)
                 .then(response => {
                     if (response.status === 200) {
