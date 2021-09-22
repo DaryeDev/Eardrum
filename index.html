@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="manifest" href="/manifest.json">
+        <meta name="theme-color" content="#000000">
+        <title>PWA</title>
+        <link rel="stylesheet" href="src/master.css">
+        <link rel="apple-touch-icon" href="images/logo192.png">
+    </head>
+    <body>
+        <p>Test PWA</p>
+        <p id="status">Status: Loading...</p>
+        <script src="src/index.js"></script>
+        <script>
+
+            function changeStatusIndicator(status) {
+                statusElement = document.getElementById("status");
+
+                if (status == "online"){
+                    statusElement.innerHTML = "Status: Online";
+                } else {
+                    statusElement.innerHTML = "Status: Offline";
+                }
+            };
+
+            window.addEventListener("online", updateStatus);
+            window.addEventListener("offline", updateStatus);
+
+            function updateStatus(event) {
+                if(navigator.onLine) {
+                    console.log("Your connection is back!");
+                    changeStatusIndicator("online");
+                } else {
+                    console.log("Conection lost!");
+                    changeStatusIndicator("offline");
+                }
+            };
+            
+            const myRequest = new Request('./isOnline.html', {method: 'GET'});
+            fetch(myRequest)
+                .then(response => {
+                    if (response.status === 200) {
+                        console.log("isOnline");
+                        changeStatusIndicator("online");
+                        return response;
+                    } else {
+                    }
+                })
+                .then(response => {
+                }).catch(error => {
+                    console.log("isOffline");
+                    changeStatusIndicator("offline");
+                });
+
+        </script>
+    </body>
+</html>
