@@ -1,0 +1,6 @@
+[{
+        "relation": ["delegate_permission/common.handle_all_urls"],
+        "target" : { "namespace": "android_app", "package_name": "com.darye.eardrum",
+                     "sha256_cert_fingerprints": ["33:B7:0C:DB:3A:49:10:9F:EF:59:55:C1:85:48:12:D8:05:5D:A9:24:87:CE:9A:F6:EA:88:4B:42:76:80:03:55"] }
+      }
+]
