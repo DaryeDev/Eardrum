@@ -5,8 +5,8 @@
     }
 </style>
 
-<title>Process RAW PCM data using RecordRTC</title>
-<h1>Process RAW PCM data using RecordRTC</h1>
+<title>testRecord2</title>
+<h1>testRecord2</h1>
 
 <br>
 <button id="btn-start-recording">Start Recording</button>
@@ -14,7 +14,8 @@
 
 <hr>
 <audio controls autoplay playsinline></audio>
-
+<br>
+<p id="b64Audio"></p>
 <script src="/RecordRTC.js"></script>
 <script>
 var audio = document.querySelector('audio');
@@ -59,6 +60,13 @@ function stopRecordingCallback() {
         var blob = new Blob([buffer], {
             type: 'audio/wav'
         });
+        var reader = new FileReader();
+        reader.readAsDataURL(blob); 
+        reader.onloadend = function() {
+        var base64data = reader.result;                
+        console.log(base64data);
+        document.getElementById("b64Audio").innerHTML = base64data;
+        }
         audio.srcObject = null;
         audio.src = URL.createObjectURL(blob);
     });
@@ -85,13 +93,32 @@ document.getElementById('btn-start-recording').onclick = function() {
         recorder.microphone = microphone;
 
         document.getElementById('btn-stop-recording').disabled = false;
+        setTimeout(function(){
+            if (document.getElementById('btn-stop-recording').disabled == false) {
+                this.disabled = true;
+                recorder.stopRecording(stopRecordingCallback);
+                document.getElementById('btn-stop-recording').disabled = true;
+                document.getElementById('btn-start-recording').disabled = false;
+            }
+        }, 5000);
     });
 };
 
 document.getElementById('btn-stop-recording').onclick = function() {
     this.disabled = true;
     recorder.stopRecording(stopRecordingCallback);
+    document.getElementById('btn-start-recording').disabled = false;
+
 };
+
+function convertFloat32ToInt16(buffer) {
+l = buffer.length;
+buf = new Int16Array(l);
+while (l‐‐) {
+    buf[l]=Math.min(1,buffer[l])*0x7FFF;
+}
+return buf.buffer;
+}
 
 // ------------------------------------------------------------
 
@@ -275,6 +302,12 @@ function mergeLeftRightBuffers(config, callback) {
             buffer: buffer,
             view: view
         });
+        var reader = new FileReader();
+        reader.readAsDataURL(blob); 
+        reader.onloadend = function() {
+        var base64data = reader.result;                
+        console.log(base64data);
+        }
     }
 
     if (!isChrome) {
@@ -307,7 +340,15 @@ function processInWebWorker(_function) {
 
     var worker = new Worker(workerURL);
     worker.workerURL = workerURL;
+    
     return worker;
+    
+}
+var reader = new FileReader();
+reader.readAsDataURL(blob); 
+reader.onloadend = function() {
+var base64data = reader.result;                
+console.log(base64data);
 }
 </script>
 
