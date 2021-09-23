@@ -215,7 +215,7 @@
             var rightBuffers = config.rightBuffers.slice(0);
             var sampleRate = 44100;
             var internalInterleavedLength = config.internalInterleavedLength;
-            var desiredSampRate = config.desiredSampRate;
+            var desiredSampRate = 44100;
 
             if (numberOfAudioChannels === 2) {
                 leftBuffers = mergeBuffers(leftBuffers, internalInterleavedLength);
