@@ -52,7 +52,8 @@
                 var songNameAuthor = data.track.title + " - " + data.track.subtitle;
                 var songName = data.track.title;
                 var songAuthor = data.track.subtitle;
-                var youtubeLink = data.track.sections[1].youtubeurl.actions[0].uri;
+                var youtubeLink = "";
+                // var youtubeLink = data.track.sections[1].youtubeurl.actions[0].uri;
                 var spotifyLink = searchSpotify(songNameAuthor);
                 document.getElementById("trackInfo").innerHTML = songNameAuthor;
                 document.getElementById("trackImg").src = data.track.images.coverarthq;
@@ -84,7 +85,7 @@
             "headers": {
                 "Accept": "application/json",
                 "content-type": "application/json",
-                "Authorization": "Bearer BQAGMMxI5OHncfxvtCSTUVzZSbKBYqZ9uIHVYwYjO9EXa8XiMOafBjxlE6HhqiWL3zYW6FDmXVohOPRCOowOHrbUDLDPajfeayCmUCGwqsHtnvCc3pqGvk9ANPonZ8wswzd_wOUJ7Bz8KgDZ4D3rb4I-BP9cXefZewKKewJGaNu2x5ab",
+                "Authorization": "Bearer BQAcIOZFsY9bTLQj3qLmrplrKy8TuLGDZQc5LFyH0ZARhWHuUggetmzLzFRC2njfOpLZjDNNbm5u8HYf4Je0pcU0SbdxdsxdkGysw9I36R1h190k3mHlF14q7zV15hMJciLZQ1nXT8EEdDu0VssntWPrVoBPtwLWPjjlMcpWZKJ2D6PO",
             }
         })
         .then((resp) => resp.json())
