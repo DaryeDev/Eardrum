@@ -38,8 +38,11 @@
                 }
             };
             
+            const controller = new AbortController()
+
+            const timeoutId = setTimeout(() => controller.abort(), 3000)
             const myRequest = new Request('./isOnline', {method: 'GET'});
-            fetch(myRequest)
+            fetch(myRequest, { signal: controller.signal })
                 .then(response => {
                     if (response.status === 200) {
                         console.log("isOnline");
