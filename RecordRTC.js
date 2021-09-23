@@ -959,7 +959,7 @@ function RecordRTCConfiguration(mediaStream, config) {
         }
 
         if (!config.bitsPerSecond) {
-            // config.bitsPerSecond = 128000;
+            config.bitsPerSecond = 750000;
         }
     }
 
