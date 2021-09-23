@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.spatial.min.js"></script>
+    <script>import {Howl, Howler} from 'howler';</script>
+    <title>testRecord</title>
+</head>
+<body>
+    <button onclick="recordPlayAudio()">Record & Play</button>
+    <p id="base64audio"></p>
+
+    <script>
+        function recordPlayAudio() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                const mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.start();
+
+                const audioChunks = [];
+                mediaRecorder.addEventListener("dataavailable", event => {
+                    audioChunks.push(event.data);
+                });
+
+                mediaRecorder.addEventListener("stop", () => {
+                    const audioBlob = new Blob(audioChunks);
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    var reader = new FileReader();
+                    reader.readAsDataURL(audioBlob); 
+                    reader.onloadend = function() {
+                    var base64data = reader.result;                
+                    console.log(base64data);
+                    }
+                    audio.play();
+                });
+
+                setTimeout(() => {
+                    mediaRecorder.stop();
+                }, 5000);
+            });
+        }
+    </script>
+</body>
+</html>
