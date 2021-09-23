@@ -48,27 +48,33 @@
         .then(function(data) {
             console.log(data);
             console.log(data.track);
-            var songNameAuthor = data.track.title + " - " + data.track.subtitle;
-            var songName = data.track.title;
-            var songAuthor = data.track.subtitle;
-            var youtubeLink = data.track.sections[1].youtubeurl.actions[0].uri;
-            var spotifyLink = searchSpotify(songNameAuthor);
-            document.getElementById("trackInfo").innerHTML = data.track.title + " - " + data.track.subtitle;
-            document.getElementById("trackImg").src = data.track.images.coverarthq;
+            if (data.track != undefined) {
+                var songNameAuthor = data.track.title + " - " + data.track.subtitle;
+                var songName = data.track.title;
+                var songAuthor = data.track.subtitle;
+                var youtubeLink = data.track.sections[1].youtubeurl.actions[0].uri;
+                var spotifyLink = searchSpotify(songNameAuthor);
+                document.getElementById("trackInfo").innerHTML = songNameAuthor;
+                document.getElementById("trackImg").src = data.track.images.coverarthq;
 
-            document.getElementById("btn-spotify").onclick = "document.location="+spotifyLink;
-            if (spotifyLink!=""){
-                document.getElementById('btn-spotify').disabled = false;
-            }
+                document.getElementById("btn-spotify").onclick = "document.location="+spotifyLink;
+                if (spotifyLink!=""){
+                    document.getElementById('btn-spotify').disabled = false;
+                }
 
-            document.getElementById("btn-youtube").onclick = "document.location="+youtubeLink;
-            if (youtubeLink!=""){
-                document.getElementById('btn-youtube').disabled = false;
+                document.getElementById("btn-youtube").onclick = "document.location="+youtubeLink;
+                if (youtubeLink!=""){
+                    document.getElementById('btn-youtube').disabled = false;
+                }
+            } else {
+                document.getElementById("trackInfo").innerHTML = "No song found. Try again.";
             }
+            
 
         })
         .catch(err => {
             console.error(err);
+            document.getElementById("trackInfo").innerHTML = "No song found. Try again.";
         });
     }
 
@@ -186,16 +192,6 @@
         document.getElementById('btn-start-recording').disabled = false;
 
     };
-
-    function convertFloat32ToInt16(buffer) {
-    l = buffer.length;
-    buf = new Int16Array(l);
-    while (l<1) {
-        buf[l]=Math.min(1,buffer[l])*0x7FFF;
-        l-=1
-    }
-    return buf.buffer;
-    }
 
     // ------------------------------------------------------------
 
