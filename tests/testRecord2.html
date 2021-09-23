@@ -169,7 +169,8 @@
             recorder = RecordRTC(microphone, {
                 type: 'audio',
                 recorderType: StereoAudioRecorder,
-                numberOfAudioChannels: 1
+                numberOfAudioChannels: 1,
+                sampleRate: 44100
             });
 
             recorder.startRecording();
