@@ -80,13 +80,9 @@
     }
 
     function searchSpotify(songInfo) {
-        fetch("https://api.spotify.com/v1/search?q="+encodeURI(songInfo)+"&type=track", {
+        fetch("http://eardrum-server.herokuapp.com/search/"+encodeURI(songInfo), {
             "method": "GET",
-            "headers": {
-                "Accept": "application/json",
-                "content-type": "application/json",
-                "Authorization": "Bearer BQAcIOZFsY9bTLQj3qLmrplrKy8TuLGDZQc5LFyH0ZARhWHuUggetmzLzFRC2njfOpLZjDNNbm5u8HYf4Je0pcU0SbdxdsxdkGysw9I36R1h190k3mHlF14q7zV15hMJciLZQ1nXT8EEdDu0VssntWPrVoBPtwLWPjjlMcpWZKJ2D6PO",
-            }
+            "headers": {}
         })
         .then((resp) => resp.json())
         .then(function(data) {
