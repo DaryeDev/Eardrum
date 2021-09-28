@@ -75,7 +75,7 @@
         })
         .catch(err => {
             console.error(err);
-            document.getElementById("trackInfo").innerHTML = "No song found. Try again.";
+            document.getElementById("trackInfo").innerHTML = "No song found. Try again. Error: "+err;
         });
     }
 
