@@ -25,7 +25,7 @@
 
 <button id="btn-spotify" disabled>Open in Spotify</button>
 <button id="btn-youtube" disabled onclick="document.location='.'">Open in YouTube</button>
-<a href="https://www.w3schools.com/" target="_blank">Visit W3Schools.com!</a>
+<a href="" target="_blank" id="btn-spotify-alt">Open in Spotify</a>
 <a href="https://www.w3schools.com/" target="_blank">Visit W3Schools.com!</a>
 
 <br>
@@ -66,6 +66,7 @@
                 var youtubeLink = "";
                 // var youtubeLink = data.track.sections[1].youtubeurl.actions[0].uri;
                 var spotifyLink = searchSpotify(songNameAuthor);
+                console.log(spotifyLink);
                 document.getElementById("trackInfo").innerHTML = songNameAuthor;
                 document.getElementById("trackImg").src = data.track.images.coverarthq;
 
@@ -91,9 +92,10 @@
     }
 
     function searchSpotify(songInfo) {
-        fetch("https://eardrum-server.herokuapp.com/search/"+encodeURI(songInfo), {
+        fetch("http://eardrum-server.herokuapp.com/search/"+encodeURI(songInfo), {
             "method": "GET",
-            "headers": {}
+            "headers": {},
+            mode:"no-cors"
         })
         .then((resp) => resp.json())
         .then(function(data) {
