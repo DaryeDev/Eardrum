@@ -10,20 +10,43 @@
     <title>SoundSaver</title>
     <link rel="stylesheet" href="src/master.css">
     <link rel="apple-touch-icon" href="images/logo192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <script src="src/index.js"></script>
+    <script src="/RecordRTC.js"></script>
+
     <script>
+
         function startHearing() {
             document.querySelector(".circle").style.height = "15rem";
             document.querySelector(".circle").style.width = "15rem";
-            getAudio()
+            captureMicrophone(function (microphone) {
+                audio.srcObject = microphone;
+
+                recorder = RecordRTC(microphone, {
+                    type: 'audio',
+                    recorderType: StereoAudioRecorder,
+                    numberOfAudioChannels: 1,
+                    sampleRate: 44100,
+                    audioBitsPerSecond: 750000
+                });
+
+                recorder.startRecording();
+
+                // release microphone on stopRecording
+                recorder.microphone = microphone;
+
+                setTimeout(function () {
+                    recorder.stopRecording(stopRecordingCallback);
+                    document.querySelector(".circle").style.height = "12rem";
+                    document.querySelector(".circle").style.width = "12rem";
+                }, 3000);
+            });
             setTimeout(() => {
-                openEditor();
-                document.querySelector(".circle").style.height = "12rem";
-                document.querySelector(".circle").style.width = "12rem";
             }, 3000);
         }
         function openEditor() {
-            stream.getTracks()[0].stop()
             document.getElementById("pop").hidden = false;
             setTimeout(() => {
                 document.getElementById("pop").style.top = "0%";
@@ -35,99 +58,424 @@
                 document.getElementById("pop").hidden = true;
             }, 500);
         }
+
+        function detectSong(base64) {
+            fetch("https://shazam.p.rapidapi.com/songs/v2/detect?timezone=America%2FChicago&locale=en-US", {
+                "method": "POST",
+                "headers": {
+                    "content-type": "text/plain",
+                    "x-rapidapi-host": "shazam.p.rapidapi.com",
+                    "x-rapidapi-key": "4dda850ec5mshceef03eb366f99ap1ecf4djsna4b4300df22d"
+                },
+                "body": base64
+            })
+                .then((resp) => resp.json())
+                .then(async function (data) {
+                    console.log(data);
+                    console.log(data.track);
+                    if (data.track != undefined) {
+                        var songNameAuthor = data.track.title + " - " + data.track.subtitle;
+                        var songName = data.track.title;
+                        var songAuthor = data.track.subtitle;
+                        try {
+                            data.track.sections.forEach(element => {
+                                if (element.type == "VIDEO") {
+                                    var youtubeLink = element.youtubeurl.actions[0].uri;
+                                }
+                            });
+                        } catch (error) {
+                            console.error(error)
+                            var youtubeLink = "";
+                        }
+                        try {
+                            var spotifyLink = await searchSpotify(songNameAuthor);
+                            console.log(spotifyLink);
+                        } catch (error) {
+                            var spotifyLink = "";
+                            console.log(spotifyLink);
+                        }
+                        console.log(songName);
+                        console.log(songAuthor);
+                        console.log(songNameAuthor);
+                        document.querySelector(".song-author").innerHTML = songAuthor;
+                        document.querySelector(".song-title").innerHTML = songName;
+                        document.querySelector(".song-cover").src = data.track.images.coverarthq;
+                        document.querySelector(".popup-bg").style.backgroundImage = `url(${data.track.images.coverarthq})`
+                        openEditor();
+
+                        // document.getElementById("btn-spotify").onclick = "document.location=" + spotifyLink;
+                        // if (spotifyLink != "") {
+                        //     document.getElementById('btn-spotify').disabled = false;
+                        // }
+
+                        // document.getElementById("btn-youtube").onclick = "document.location=" + youtubeLink;
+                        // if (youtubeLink != "") {
+                        //     document.getElementById('btn-youtube').disabled = false;
+                        // }
+                    } else {
+                        // document.getElementById("trackInfo").innerHTML = "No song found. Try again.";
+                        console.log("No song found. Try again.");
+                        alert("No song found. Try again.");
+                    }
+
+
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById("trackInfo").innerHTML = "No song found. Try again. Error: " + err;
+                });
+        }
+
+        async function searchSpotify(songInfo) {
+            var url = ""
+            await fetch("http://eardrum-server.herokuapp.com/search/" + encodeURI(songInfo))
+                .then(response => response.json())
+                .then(function (data) {
+                    url = (data.tracks.items[0].external_urls.spotify);
+                })
+                .catch(err => {
+                    console.error(err);
+                    return "";
+                });
+            return url;
+        }
+
+        function captureMicrophone(callback) {
+            navigator.mediaDevices.getUserMedia({
+                audio: true
+            }).then(function (microphone) {
+                callback(microphone);
+            }).catch(function (error) {
+                alert('Unable to capture your microphone. Please check console logs.');
+                console.error(error);
+            });
+        }
+
+        function stopRecordingCallback() {
+            // ------------------------------------------------------------
+            // get access to StereoAudioRecorder object (name as "internal-recorder")
+            // ------------------------------------------------------------
+            var internalRecorder = recorder.getInternalRecorder();
+
+            // ------------------------------------------------------------
+            // get left and right audio channels
+            // ------------------------------------------------------------
+            var leftchannel = internalRecorder.leftchannel;
+            var rightchannel = internalRecorder.rightchannel;
+
+            // ------------------------------------------------------------
+            // create your own WAV
+            // ------------------------------------------------------------
+            mergeLeftRightBuffers({
+                desiredSampRate: internalRecorder.desiredSampRate,
+                sampleRate: 44100,
+                numberOfAudioChannels: internalRecorder.numberOfAudioChannels,
+                internalInterleavedLength: internalRecorder.recordingLength,
+                leftBuffers: leftchannel,
+                rightBuffers: internalRecorder.numberOfAudioChannels === 1 ? [] : rightchannel
+            }, function (buffer, view) {
+                // ------------------------------------------------------------
+                // here is your own WAV (generated by your own codes)
+                // ------------------------------------------------------------
+                console.log(internalRecorder.sampleRate);
+                console.log(typeof (internalRecorder.sampleRate));
+                console.log(internalRecorder.desiredSampRate);
+                console.log(typeof (internalRecorder.desiredSampRate));
+                var blob = new Blob([buffer], {
+                    type: 'audio/wav'
+                });
+                var reader = new FileReader();
+                reader.readAsDataURL(blob);
+                reader.onloadend = function () {
+                    var base64data = reader.result;
+                    console.log(base64data);
+                    // document.getElementById("b64Audio").innerHTML = base64data;
+                    detectSong(base64data.replace("data:audio/wav;base64,", ""))
+                }
+                audio.srcObject = null;
+                audio.src = URL.createObjectURL(blob);
+            });
+
+            recorder.microphone.stop();
+        }
+
+        var recorder; // globally accessible
+
+        // ------------------------------------------------------------
+
+        // below two methods are copied from dev/StereoAudioRecorder.js
+        // just to explain how to process RAW PCM data
+
+        // ------------------------------------------------------------
+
+        function mergeLeftRightBuffers(config, callback) {
+            function mergeAudioBuffers(config, cb) {
+                var numberOfAudioChannels = config.numberOfAudioChannels;
+
+                // todo: "slice(0)" --- is it causes loop? Should be removed?
+                var leftBuffers = config.leftBuffers.slice(0);
+                var rightBuffers = config.rightBuffers.slice(0);
+                var sampleRate = 44100;
+                var internalInterleavedLength = config.internalInterleavedLength;
+                var desiredSampRate = 44100;
+
+                if (numberOfAudioChannels === 2) {
+                    leftBuffers = mergeBuffers(leftBuffers, internalInterleavedLength);
+                    rightBuffers = mergeBuffers(rightBuffers, internalInterleavedLength);
+                    if (desiredSampRate) {
+                        leftBuffers = interpolateArray(leftBuffers, desiredSampRate, sampleRate);
+                        rightBuffers = interpolateArray(rightBuffers, desiredSampRate, sampleRate);
+                    }
+                }
+
+                if (numberOfAudioChannels === 1) {
+                    leftBuffers = mergeBuffers(leftBuffers, internalInterleavedLength);
+                    if (desiredSampRate) {
+                        leftBuffers = interpolateArray(leftBuffers, desiredSampRate, sampleRate);
+                    }
+                }
+
+                // set sample rate as desired sample rate
+                if (desiredSampRate) {
+                    sampleRate = desiredSampRate;
+                }
+
+                // for changing the sampling rate, reference:
+                // http://stackoverflow.com/a/28977136/552182
+                function interpolateArray(data, newSampleRate, oldSampleRate) {
+                    var fitCount = Math.round(data.length * (newSampleRate / oldSampleRate));
+                    //var newData = new Array();
+                    var newData = [];
+                    //var springFactor = new Number((data.length - 1) / (fitCount - 1));
+                    var springFactor = Number((data.length - 1) / (fitCount - 1));
+                    newData[0] = data[0]; // for new allocation
+                    for (var i = 1; i < fitCount - 1; i++) {
+                        var tmp = i * springFactor;
+                        //var before = new Number(Math.floor(tmp)).toFixed();
+                        //var after = new Number(Math.ceil(tmp)).toFixed();
+                        var before = Number(Math.floor(tmp)).toFixed();
+                        var after = Number(Math.ceil(tmp)).toFixed();
+                        var atPoint = tmp - before;
+                        newData[i] = linearInterpolate(data[before], data[after], atPoint);
+                    }
+                    newData[fitCount - 1] = data[data.length - 1]; // for new allocation
+                    return newData;
+                }
+
+                function linearInterpolate(before, after, atPoint) {
+                    return before + (after - before) * atPoint;
+                }
+
+                function mergeBuffers(channelBuffer, rLength) {
+                    var result = new Float64Array(rLength);
+                    var offset = 0;
+                    var lng = channelBuffer.length;
+
+                    for (var i = 0; i < lng; i++) {
+                        var buffer = channelBuffer[i];
+                        result.set(buffer, offset);
+                        offset += buffer.length;
+                    }
+
+                    return result;
+                }
+
+                function interleave(leftChannel, rightChannel) {
+                    var length = leftChannel.length + rightChannel.length;
+
+                    var result = new Float64Array(length);
+
+                    var inputIndex = 0;
+
+                    for (var index = 0; index < length;) {
+                        result[index++] = leftChannel[inputIndex];
+                        result[index++] = rightChannel[inputIndex];
+                        inputIndex++;
+                    }
+                    return result;
+                }
+
+                function writeUTFBytes(view, offset, string) {
+                    var lng = string.length;
+                    for (var i = 0; i < lng; i++) {
+                        view.setUint8(offset + i, string.charCodeAt(i));
+                    }
+                }
+
+                // interleave both channels together
+                var interleaved;
+
+                if (numberOfAudioChannels === 2) {
+                    interleaved = interleave(leftBuffers, rightBuffers);
+                }
+
+                if (numberOfAudioChannels === 1) {
+                    interleaved = leftBuffers;
+                }
+
+                var interleavedLength = interleaved.length;
+
+                // create wav file
+                var resultingBufferLength = 44 + interleavedLength * 2;
+
+                var buffer = new ArrayBuffer(resultingBufferLength);
+
+                var view = new DataView(buffer);
+
+                // RIFF chunk descriptor/identifier 
+                writeUTFBytes(view, 0, 'RIFF');
+
+                // RIFF chunk length
+                view.setUint32(4, 44 + interleavedLength * 2, true);
+
+                // RIFF type 
+                writeUTFBytes(view, 8, 'WAVE');
+
+                // format chunk identifier 
+                // FMT sub-chunk
+                writeUTFBytes(view, 12, 'fmt ');
+
+                // format chunk length 
+                view.setUint32(16, 16, true);
+
+                // sample format (raw)
+                view.setUint16(20, 1, true);
+
+                // stereo (2 channels)
+                view.setUint16(22, numberOfAudioChannels, true);
+
+                // sample rate 
+                view.setUint32(24, sampleRate, true);
+
+                // byte rate (sample rate * block align)
+                view.setUint32(28, sampleRate * 2, true);
+
+                // block align (channel count * bytes per sample) 
+                view.setUint16(32, numberOfAudioChannels * 2, true);
+
+                // bits per sample 
+                view.setUint16(34, 16, true);
+
+                // data sub-chunk
+                // data chunk identifier 
+                writeUTFBytes(view, 36, 'data');
+
+                // data chunk length 
+                view.setUint32(40, interleavedLength * 2, true);
+
+                // write the PCM samples
+                var lng = interleavedLength;
+                var index = 44;
+                var volume = 1;
+                for (var i = 0; i < lng; i++) {
+                    view.setInt16(index, interleaved[i] * (0x7FFF * volume), true);
+                    index += 2;
+                }
+
+                if (cb) {
+                    return cb({
+                        buffer: buffer,
+                        view: view
+                    });
+                }
+
+                postMessage({
+                    buffer: buffer,
+                    view: view
+                });
+                var reader = new FileReader();
+                reader.readAsDataURL(blob);
+                reader.onloadend = function () {
+                    var base64data = reader.result;
+                    console.log(base64data);
+                }
+            }
+
+            if (!isChrome) {
+                // its Microsoft Edge
+                mergeAudioBuffers(config, function (data) {
+                    callback(data.buffer, data.view);
+                });
+                return;
+            }
+
+
+            var webWorker = processInWebWorker(mergeAudioBuffers);
+
+            webWorker.onmessage = function (event) {
+                callback(event.data.buffer, event.data.view);
+
+                // release memory
+                URL.revokeObjectURL(webWorker.workerURL);
+            };
+
+            webWorker.postMessage(config);
+        }
+
+        function processInWebWorker(_function) {
+            var workerURL = URL.createObjectURL(new Blob([_function.toString(),
+            ';this.onmessage =  function (eee) {' + _function.name + '(eee.data);}'
+            ], {
+                type: 'application/javascript'
+            }));
+
+            var worker = new Worker(workerURL);
+            worker.workerURL = workerURL;
+
+            return worker;
+
+        }
+        var reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = function () {
+            var base64data = reader.result;
+            // console.log(base64data);
+        }
     </script>
 </head>
 
 <body style="overflow: hidden;">
+    <audio controls autoplay muted hidden playsinline></audio>
     <div class="bg">
-    <canvas class="canvas" style="position:absolute;width: 100%; height:100%;"></canvas></div>
-    <div class="ss-button">
-        <div class="circle" onclick="startHearing()">
-            <img src="/images/New Project(2).png" alt=""
-                style="height: 12rem !important; border-radius: 34%;height: inherit;filter: invert(100%);position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);">
-        </div>
-    </div>
-    <div hidden class="pop" id="pop" style="top:80% ;transition: top 0.5s;">
-        <div class="popup-song">
-            <div class="popup-bg"></div>
-            <div class="popup-content">
-                <div class="drop-icon" onclick="closeEditor()"></div>
-                <div class="song-cover"></div>
-                <div class="song-text">
-                    <div class="song-title"></div>
-                    <div class="song-author"></div>
-                </div>
-                <div class="popup-buttons">
-                    <div class="spotify-button">
-                        <svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#"
-                            xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-                            xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" id="svg881"
-                            version="1.1" viewBox="0 0 496 512">
-                            <defs id="defs885" />
-                            <path style="fill:#1ed760;fill-opacity:1" id="path979"
-                                d="M 248,8 C 111.1,8 0,119.1 0,256 0,392.9 111.1,504 248,504 384.9,504 496,392.9 496,256 496,119.1 384.9,8 248,8 Z" />
-                            <path
-                                d="m 406.6,231.1 c -5.2,0 -8.4,-1.3 -12.9,-3.9 -71.2,-42.5 -198.5,-52.7 -280.9,-29.7 -3.6,1 -8.1,2.6 -12.9,2.6 -13.2,0 -23.3,-10.3 -23.3,-23.6 0,-13.6 8.4,-21.3 17.4,-23.9 35.2,-10.3 74.6,-15.2 117.5,-15.2 73,0 149.5,15.2 205.4,47.8 7.8,4.5 12.9,10.7 12.9,22.6 0,13.6 -11,23.3 -23.2,23.3 z m -31,76.2 c -5.2,0 -8.7,-2.3 -12.3,-4.2 -62.5,-37 -155.7,-51.9 -238.6,-29.4 -4.8,1.3 -7.4,2.6 -11.9,2.6 -10.7,0 -19.4,-8.7 -19.4,-19.4 0,-10.7 5.2,-17.8 15.5,-20.7 27.8,-7.8 56.2,-13.6 97.8,-13.6 64.9,0 127.6,16.1 177,45.5 8.1,4.8 11.3,11 11.3,19.7 -0.1,10.8 -8.5,19.5 -19.4,19.5 z m -26.9,65.6 c -4.2,0 -6.8,-1.3 -10.7,-3.6 -62.4,-37.6 -135,-39.2 -206.7,-24.5 -3.9,1 -9,2.6 -11.9,2.6 -9.7,0 -15.8,-7.7 -15.8,-15.8 0,-10.3 6.1,-15.2 13.6,-16.8 81.9,-18.1 165.6,-16.5 237,26.2 6.1,3.9 9.7,7.4 9.7,16.5 0,9.1 -7.1,15.4 -15.2,15.4 z"
-                                style="fill:#000000" id="path879" />
-                        </svg>
-                    </div>
-                    <div class="save-button"></div>
-                    <div class="yt-button"></div>
-                </div>
+        <div class="ss-button">
+            <div class="circle" onclick="startHearing()">
+                <img src="/images/New Project(2).png" alt=""
+                    style="height: 12rem !important; border-radius: 34%;height: inherit;filter: invert(100%);position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);">
             </div>
         </div>
-        <div¡ class="out-card" onclick="closeEditor()">
+        <div hidden class="pop" id="pop" style="top:80% ;transition: top 0.5s;">
+            <div class="popup-song">
+                <div class="popup-bg"></div>
+                <div class="popup-content">
+                    <div class="drop-icon" onclick="closeEditor()"></div>
+                    <img src="https://is4-ssl.mzstatic.com/image/thumb/Music124/v4/71/22/b8/7122b8be-d22f-6ae7-a705-31799780045c/859716525228_cover.jpg/400x400cc.jpg" alt="" class="song-cover">
+                    <div class="song-text">
+                        <p class="song-title" style="margin: 0; font-family: Montserrat; font-weight: 600;">Necromancing Dancing</p>
+                        <p class="song-author" style="margin: 0; font-family: Montserrat; font-weight: 300;">Bear Ghost</p>
+                    </div>
+                    <div class="popup-buttons">
+                        <div class="spotify-button">
+                            <svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#"
+                                xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+                                xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" id="svg881"
+                                version="1.1" viewBox="0 0 496 512">
+                                <defs id="defs885" />
+                                <path style="fill:#1ed760;fill-opacity:1" id="path979"
+                                    d="M 248,8 C 111.1,8 0,119.1 0,256 0,392.9 111.1,504 248,504 384.9,504 496,392.9 496,256 496,119.1 384.9,8 248,8 Z" />
+                                <path
+                                    d="m 406.6,231.1 c -5.2,0 -8.4,-1.3 -12.9,-3.9 -71.2,-42.5 -198.5,-52.7 -280.9,-29.7 -3.6,1 -8.1,2.6 -12.9,2.6 -13.2,0 -23.3,-10.3 -23.3,-23.6 0,-13.6 8.4,-21.3 17.4,-23.9 35.2,-10.3 74.6,-15.2 117.5,-15.2 73,0 149.5,15.2 205.4,47.8 7.8,4.5 12.9,10.7 12.9,22.6 0,13.6 -11,23.3 -23.2,23.3 z m -31,76.2 c -5.2,0 -8.7,-2.3 -12.3,-4.2 -62.5,-37 -155.7,-51.9 -238.6,-29.4 -4.8,1.3 -7.4,2.6 -11.9,2.6 -10.7,0 -19.4,-8.7 -19.4,-19.4 0,-10.7 5.2,-17.8 15.5,-20.7 27.8,-7.8 56.2,-13.6 97.8,-13.6 64.9,0 127.6,16.1 177,45.5 8.1,4.8 11.3,11 11.3,19.7 -0.1,10.8 -8.5,19.5 -19.4,19.5 z m -26.9,65.6 c -4.2,0 -6.8,-1.3 -10.7,-3.6 -62.4,-37.6 -135,-39.2 -206.7,-24.5 -3.9,1 -9,2.6 -11.9,2.6 -9.7,0 -15.8,-7.7 -15.8,-15.8 0,-10.3 6.1,-15.2 13.6,-16.8 81.9,-18.1 165.6,-16.5 237,26.2 6.1,3.9 9.7,7.4 9.7,16.5 0,9.1 -7.1,15.4 -15.2,15.4 z"
+                                    style="fill:#000000" id="path879" />
+                            </svg>
+                        </div>
+                        <div class="save-button"></div>
+                        <div class="yt-button"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="out-card" onclick="closeEditor()">
+        </div>
     </div>
-    </div>
-    <script>
-        var stream = null;
-        const WIDTH = 1500;
-        const HEIGHT = 1500;
-        const canvas = document.querySelector(".canvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = WIDTH;
-        canvas.height = HEIGHT;
-        let analyzer;
-        function handleError(err) {
-            console.log('NoMicPermission');
-        }
-        async function getAudio() {
-            stream = await navigator.mediaDevices
-                .getUserMedia({ audio: true })
-                .catch(handleError);
-            const audioCtx = new AudioContext();
-            analyzer = audioCtx.createAnalyser();
-            const source = audioCtx.createMediaStreamSource(stream);
-            source.connect(analyzer);
-            analyzer.fftSize = 2 ** 8;
-            bufferLength = analyzer.frequencyBinCount;
-            bufferLength = analyzer.frequencyBinCount;
-            const timeData = new Uint8Array(bufferLength);
-            const frequencyData = new Uint8Array(bufferLength);
-            drawFrequency(frequencyData);
-        }
-
-        function drawFrequency(frequencyData) {
-            var x = 0;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            analyzer.getByteFrequencyData(frequencyData);
-            console.log(frequencyData);
-            requestAnimationFrame(() => drawFrequency(frequencyData));
-            frequencyData.forEach((amount) => {
-                const percent = amount / 255;
-                const barWidth = 5;
-                const barHeight = (HEIGHT * percent) / 5;
-                ctx.fillStyle = "red";
-                ctx.fillRect(
-                    x,
-                    HEIGHT - barHeight,
-                    barWidth,
-                    barHeight
-                );
-                x += (barWidth +1)
-            });
-        }
-    </script>
+    <script>var audio = document.querySelector('audio');</script>
 </body>
 <style>
     body {
@@ -217,6 +565,27 @@
         border-radius: 20px;
         margin: 01%;
         display: flex;
+    }
+
+    .song-cover {
+        height: 40%;
+        /* width: 7%; */
+        background-color: lightgrey;
+        border-radius: 20px;
+        margin: 01%;
+        display: flex;
+        top: 5%;
+        position: absolute;
+        border-style: solid;
+        border-color: white;
+    }
+
+    .song-text {
+        position: absolute;
+        text-align: center;
+        top: 50%;
+        font-size: 150%;
+        color: white;
     }
 
 
