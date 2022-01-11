@@ -1,6 +1,6 @@
 {
-    "short_name": "Project Eardrum",
-    "name": "Project Eardrum",
+    "short_name": "SoundSaver",
+    "name": "SoundSaver",
     "icons": [
       {
         "src": "/images/logo192.png",
@@ -14,9 +14,9 @@
       }
     ],
     "start_url": ".",
-    "background_color": "#000000",
+    "background_color": "#E5B2CA",
     "display": "fullscreen",
-    "theme_color": "#000000",
+    "theme_color": "#E5B2CA",
     "shortcuts": [
       {
         "name": "Test1",
@@ -26,6 +26,6 @@
         "icons": [{ "src": "/images/logo192.png", "sizes": "192x192" }]
       }
     ],
-    "description": "Project Eardrum",
+    "description": "SoundSaver",
     "screenshots": []
   }
