@@ -107,13 +107,15 @@
                         openEditor();
 
                         document.getElementById("btn-spotify").onclick = "document.location=" + spotifyLink;
-                        if (spotifyLink != "") {
+                        document.getElementById('btn-spotify').style.filter = "";
+                        if (spotifyLink == "") {
                             document.getElementById('btn-spotify').onclick = "";
                             document.getElementById('btn-spotify').style.filter = "grayscale(1) brightness(0.5)";
                         }
 
                         document.getElementById("btn-youtube").onclick = "document.location=" + youtubeLink;
-                        if (youtubeLink != "") {
+                        document.getElementById('btn-youtube').style.filter = "";
+                        if (youtubeLink == "") {
                             document.getElementById('btn-youtube').onclick = "";
                             document.getElementById('btn-youtube').style.filter = "grayscale(1) brightness(0.5)";
                         }
