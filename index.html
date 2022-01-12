@@ -45,12 +45,9 @@
 
                 setTimeout(function () {
                     recorder.stopRecording(stopRecordingCallback);
-                    document.querySelector(".circle").style.height = "12rem";
-                    document.querySelector(".circle").style.width = "12rem";
                 }, 3000);
             });
-            setTimeout(() => {
-            }, 3000);
+            
         }
         function openEditor() {
             document.getElementById("pop").hidden = false;
@@ -115,6 +112,10 @@
                         document.querySelector(".song-title").innerHTML = songName;
                         document.querySelector(".song-cover").src = data.track.images.coverarthq;
                         document.querySelector(".popup-bg").style.backgroundImage = `url(${data.track.images.coverarthq})`
+                        setTimeout(() => {
+                            document.querySelector(".circle").style.height = "12rem";
+                            document.querySelector(".circle").style.width = "12rem";
+                        }, 500);
                         openEditor();
 
                     } else {
