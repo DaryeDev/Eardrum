@@ -88,6 +88,7 @@
                                 if (element.type == "VIDEO") {
                                     youtubeLink = element.youtubeurl.actions[0].uri;
                                     document.getElementById('btn-youtube').style.filter = "";
+                                    document.getElementById('btn-save').style.filter = "";
                                     youtubedlLink = "https://www.yt-download.org/api/button/mp3/"+youtubeLink.replace("https://youtu.be/", "").replace("?autoplay=1", "");
 
                                 }
@@ -95,7 +96,9 @@
                         } catch (error) {
                             console.error(error)
                             youtubeLink = "";
+                            youtubedlLink = "";
                             document.getElementById('btn-youtube').style.filter = "grayscale(1) brightness(0.5)";
+                            document.getElementById('btn-save').style.filter = "grayscale(1) brightness(0.5)";
                         }
                         try {
                             spotifyLink = await searchSpotify(songNameAuthor);
