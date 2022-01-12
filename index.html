@@ -20,6 +20,8 @@
     <script src="/RecordRTC.js"></script>
 
     <script>
+        var spotifyLink = "";
+        var youtubeLink = "";
 
         function startHearing() {
             document.querySelector(".circle").style.height = "15rem";
@@ -83,18 +85,21 @@
                         try {
                             data.track.sections.forEach(element => {
                                 if (element.type == "VIDEO") {
-                                    var youtubeLink = element.youtubeurl.actions[0].uri;
+                                    youtubeLink = element.youtubeurl.actions[0].uri;
+                                    document.getElementById('btn-youtube').style.filter = "";
                                 }
                             });
                         } catch (error) {
                             console.error(error)
-                            var youtubeLink = "";
+                            youtubeLink = "";
+                            document.getElementById('btn-youtube').style.filter = "grayscale(1) brightness(0.5)";
                         }
                         try {
-                            var spotifyLink = await searchSpotify(songNameAuthor);
-                            console.log(spotifyLink);
+                            spotifyLink = await searchSpotify(songNameAuthor);
+                            console.log(spotifyLink);document.getElementById('btn-spotify').style.filter = "";
                         } catch (error) {
-                            var spotifyLink = "";
+                            spotifyLink = "";
+                            document.getElementById('btn-spotify').style.filter = "grayscale(1) brightness(0.5)";
                             console.log(spotifyLink);
                         }
                         console.log(songName);
@@ -105,20 +110,6 @@
                         document.querySelector(".song-cover").src = data.track.images.coverarthq;
                         document.querySelector(".popup-bg").style.backgroundImage = `url(${data.track.images.coverarthq})`
                         openEditor();
-
-                        document.getElementById("btn-spotify").onclick = "document.location=" + spotifyLink;
-                        document.getElementById('btn-spotify').style.filter = "";
-                        if (spotifyLink == "") {
-                            document.getElementById('btn-spotify').onclick = "";
-                            document.getElementById('btn-spotify').style.filter = "grayscale(1) brightness(0.5)";
-                        }
-
-                        document.getElementById("btn-youtube").onclick = "document.location=" + youtubeLink;
-                        document.getElementById('btn-youtube').style.filter = "";
-                        if (youtubeLink == "") {
-                            document.getElementById('btn-youtube').onclick = "";
-                            document.getElementById('btn-youtube').style.filter = "grayscale(1) brightness(0.5)";
-                        }
 
                     } else {
                         // document.getElementById("trackInfo").innerHTML = "No song found. Try again.";
@@ -466,7 +457,8 @@
                     </div>
                     <div class="popup-buttons">
                         <div id="btn-spotify"
-                            style="width: 6%;/* margin: 0px; */top: 70%;left: 60%;position: absolute;filter: grayscale(1) brightness(0.5);">
+                            style="width: 6%;/* margin: 0px; */top: 70%;left: 60%;position: absolute;filter: grayscale(1) brightness(0.5);"
+                            onclick="window.location.href = spotifyLink">
                             <svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#"
                                 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
                                 xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" id="svg881"
@@ -482,6 +474,7 @@
                         </div>
                         <div id="btn-save"></div>
                         <div id="btn-youtube"
+                            onclick="window.location.href = youtubeLink" 
                             style="width: 6%;top: 70%;left: 34%;position: absolute;filter: grayscale(1) brightness(0.5);border-radius: 100%;">
                             <svg viewBox="0 0 300 300">
                                 <g id="g4189" transform="scale(0.75,0.75)">
