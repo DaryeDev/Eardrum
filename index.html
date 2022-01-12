@@ -22,6 +22,7 @@
     <script>
         var spotifyLink = "";
         var youtubeLink = "";
+        var youtubedlLink = "https://www.yt-download.org/api/button/mp3/";
 
         function startHearing() {
             document.querySelector(".circle").style.height = "15rem";
@@ -87,6 +88,8 @@
                                 if (element.type == "VIDEO") {
                                     youtubeLink = element.youtubeurl.actions[0].uri;
                                     document.getElementById('btn-youtube').style.filter = "";
+                                    youtubedlLink = "https://www.yt-download.org/api/button/mp3/"+youtubeLink.replace("https://youtu.be/", "").replace("?autoplay=1", "");
+
                                 }
                             });
                         } catch (error) {
@@ -96,7 +99,7 @@
                         }
                         try {
                             spotifyLink = await searchSpotify(songNameAuthor);
-                            console.log(spotifyLink);document.getElementById('btn-spotify').style.filter = "";
+                            console.log(spotifyLink); document.getElementById('btn-spotify').style.filter = "";
                         } catch (error) {
                             spotifyLink = "";
                             document.getElementById('btn-spotify').style.filter = "grayscale(1) brightness(0.5)";
@@ -457,7 +460,7 @@
                     </div>
                     <div class="popup-buttons">
                         <div id="btn-spotify"
-                            style="width: 6%;/* margin: 0px; */top: 70%;left: 60%;position: absolute;filter: grayscale(1) brightness(0.5);"
+                            style="width: 6%;/* margin: 0px; */top: 75%;left: 60%;position: absolute;filter: grayscale(1) brightness(0.5);"
                             onclick="window.open(spotifyLink, '_blank').focus();">
                             <svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#"
                                 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -472,10 +475,11 @@
                                     style="fill:#000000" id="path879"></path>
                             </svg>
                         </div>
-                        <div id="btn-save"></div>
-                        <div id="btn-youtube"
-                            onclick="window.open(youtubeLink, '_blank').focus();" 
-                            style="width: 6%;top: 70%;left: 34%;position: absolute;filter: grayscale(1) brightness(0.5);border-radius: 100%;">
+                        <div id="btn-save" style="width: 12%;/* margin: 0px; */top: 65%;left: 44%;position: absolute;filter: grayscale(1) brightness(0.5);" onclick="window.open(youtubedlLink, '_blank').focus();">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" preserveAspectRatio="none"><path d="M150 28c67.379 0 122 54.621 122 122 0 67.379-54.621 122-122 122-67.379 0-122-54.621-122-122C28 82.621 82.621 28 150 28zm40 67h-80a1 1 0 00-1 1v126.094a1 1 0 001.788.615l38.424-49.224a1 1 0 011.576 0l38.424 49.224a1 1 0 001.788-.615V96a1 1 0 00-1-1z" fill="#ffffff" fill-rule="evenodd"></path></svg>
+                        </div>
+                        <div id="btn-youtube" onclick="window.open(youtubeLink, '_blank').focus();"
+                            style="width: 6%;top: 75%;left: 34%;position: absolute;filter: grayscale(1) brightness(0.5);border-radius: 100%;">
                             <svg viewBox="0 0 300 300">
                                 <g id="g4189" transform="scale(0.75,0.75)">
                                     <rect width="400" height="400" id="rect4" style="fill:#ff0000;fill-opacity:1" x="0"
